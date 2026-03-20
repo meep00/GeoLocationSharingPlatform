@@ -1,0 +1,17 @@
+{
+  "name": "geolocation-sharing-platform",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend/*",
+    "mobile"
+  ],
+  "scripts": {
+    "start:gateway": "npm run -w backend/gateway start:dev",
+    "start:auth": "npm run -w backend/auth-users-service start:dev",
+    "start:tours": "npm run -w backend/tours-service start:dev",
+    "start:location": "npm run -w backend/location-service start:dev",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}

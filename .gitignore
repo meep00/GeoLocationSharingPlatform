@@ -1,0 +1,30 @@
+node_modules
+dist
+.env
+.expo
+coverage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE/editor
+.idea/
+.vscode/
+.cursor/
+
+# Agent/tooling local state
+.junie/
+agents-transcripts/
+.cursor/plans/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Expo / React Native local
+.expo/
+.expo-shared/
+
+# Build/temp
+*.tmp
+*.swp

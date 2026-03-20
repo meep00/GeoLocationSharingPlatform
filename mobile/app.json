@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "GeoLocationSharingPlatform",
+    "slug": "geo-location-sharing-platform",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "newArchEnabled": true,
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
