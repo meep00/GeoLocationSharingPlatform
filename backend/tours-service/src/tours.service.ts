@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
 import { DataSource, In, Repository } from 'typeorm';
+import { GuideLastLocationEntity } from './guide-last-location.entity';
 import { MeetingPointEntity } from './meeting-point.entity';
 import { PoiEntity } from './poi.entity';
 import { TourParticipantEntity } from './tour-participant.entity';
@@ -48,7 +49,7 @@ interface CreateMeetingPointInput {
   name: string;
   lat: number;
   lng: number;
-  meetupTime?: Date;
+  meetupTime?: string;
   isCurrent?: boolean;
 }
 
@@ -59,7 +60,7 @@ interface UpdateMeetingPointInput {
   name?: string;
   lat?: number;
   lng?: number;
-  meetupTime?: Date | null;
+  meetupTime?: string | null;
   isCurrent?: boolean;
 }
 
@@ -128,7 +129,7 @@ interface MeetingPointResponse {
   name: string;
   lat: number;
   lng: number;
-  meetupTime?: Date;
+  meetupTime?: string;
   isCurrent: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -156,7 +157,9 @@ export class ToursService {
     @InjectRepository(MeetingPointEntity)
     private readonly meetingPointsRepository: Repository<MeetingPointEntity>,
     @InjectRepository(PoiEntity)
-    private readonly poisRepository: Repository<PoiEntity>
+    private readonly poisRepository: Repository<PoiEntity>,
+    @InjectRepository(GuideLastLocationEntity)
+    private readonly guideLocationRepository: Repository<GuideLastLocationEntity>
   ) {}
 
   async create(input: CreateTourInput): Promise<TourResponse> {
@@ -381,7 +384,20 @@ export class ToursService {
     if (!meetingPoint) {
       throw new NotFoundException('Meeting point not found');
     }
+    const wasCurrent = meetingPoint.isCurrent;
     await this.meetingPointsRepository.delete({ id: input.meetingPointId });
+
+    if (wasCurrent) {
+      const latest = await this.meetingPointsRepository.findOne({
+        where: { tourId: input.tourId },
+        order: { createdAt: 'DESC' }
+      });
+      if (latest) {
+        latest.isCurrent = true;
+        await this.meetingPointsRepository.save(latest);
+      }
+    }
+
     return { deleted: true };
   }
 
@@ -443,6 +459,37 @@ export class ToursService {
     }
     await this.poisRepository.delete({ id: input.poiId });
     return { deleted: true };
+  }
+
+  async upsertGuideLocation(
+    tourId: string,
+    data: { guideId: string; lat: number; lng: number; sentAt: string }
+  ): Promise<{ ok: true }> {
+    await this.guideLocationRepository.upsert(
+      {
+        tourId,
+        guideId: data.guideId,
+        lat: data.lat,
+        lng: data.lng,
+        sentAt: new Date(data.sentAt)
+      },
+      ['tourId']
+    );
+    return { ok: true };
+  }
+
+  async getGuideLocation(
+    tourId: string
+  ): Promise<{ tourId: string; guideId: string; lat: number; lng: number; sentAt: string } | null> {
+    const record = await this.guideLocationRepository.findOne({ where: { tourId } });
+    if (!record) return null;
+    return {
+      tourId: record.tourId,
+      guideId: record.guideId,
+      lat: record.lat,
+      lng: record.lng,
+      sentAt: record.sentAt.toISOString()
+    };
   }
 
   private toTourResponse(tour: TourEntity): TourResponse {

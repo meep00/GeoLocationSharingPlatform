@@ -6,6 +6,7 @@ import { AxiosProxyExceptionFilter } from './filters/axios-proxy-exception.filte
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({

@@ -112,7 +112,7 @@ export class LocationGateway implements OnGatewayConnection, OnGatewayDisconnect
     await client.join(room);
     data.joinedTours.add(tourId);
     client.emit('tour:subscribed', { tourId });
-    this.emitLastKnownToClient(tourId, client);
+    await this.emitLastKnownToClient(tourId, client);
   }
 
   @SubscribeMessage('tour:unsubscribe')
@@ -146,7 +146,7 @@ export class LocationGateway implements OnGatewayConnection, OnGatewayDisconnect
       client.emit('tour:error', { message: 'Tour access denied' });
       return;
     }
-    this.emitLastKnownToClient(tourId, client);
+    await this.emitLastKnownToClient(tourId, client);
   }
 
   @SubscribeMessage('guide:location')
@@ -194,6 +194,9 @@ export class LocationGateway implements OnGatewayConnection, OnGatewayDisconnect
       isFallback: false
     };
     this.lastKnownByTour.set(payload.tourId, update);
+    this.persistGuideLocation(update).catch((err) =>
+      this.logger.warn(`Failed to persist guide location for tour ${payload.tourId}`, err)
+    );
 
     data.joinedTours.add(payload.tourId);
     await client.join(room);
@@ -206,7 +209,7 @@ export class LocationGateway implements OnGatewayConnection, OnGatewayDisconnect
     accessToken: string
   ): Promise<TourDetailsDto | null> {
     try {
-      const response = await fetch(`${this.toursServiceUrl}/tours/${tourId}`, {
+      const response = await fetch(`${this.toursServiceUrl}/api/tours/${tourId}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'x-user-id': user.sub,
@@ -231,16 +234,56 @@ export class LocationGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
-  private emitLastKnownToClient(tourId: string, client: AuthenticatedSocket): void {
+  private async emitLastKnownToClient(tourId: string, client: AuthenticatedSocket): Promise<void> {
     const lastKnown = this.lastKnownByTour.get(tourId);
-    if (!lastKnown) {
-      client.emit('guide:location:missing', { tourId });
+    if (lastKnown) {
+      client.emit('guide:location:update', { ...lastKnown, isFallback: true });
       return;
     }
-    client.emit('guide:location:update', {
-      ...lastKnown,
-      isFallback: true
+
+    const persisted = await this.fetchPersistedGuideLocation(tourId);
+    if (persisted) {
+      const fallback: LocationUpdateDto = {
+        tourId: persisted.tourId,
+        lat: persisted.lat,
+        lng: persisted.lng,
+        sentAt: persisted.sentAt,
+        guideId: persisted.guideId,
+        isFallback: true
+      };
+      this.lastKnownByTour.set(tourId, fallback);
+      client.emit('guide:location:update', fallback);
+      return;
+    }
+
+    client.emit('guide:location:missing', { tourId });
+  }
+
+  private async persistGuideLocation(update: LocationUpdateDto): Promise<void> {
+    await fetch(`${this.toursServiceUrl}/api/tours/${update.tourId}/guide-location`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        guideId: update.guideId,
+        lat: update.lat,
+        lng: update.lng,
+        sentAt: update.sentAt
+      })
     });
+  }
+
+  private async fetchPersistedGuideLocation(
+    tourId: string
+  ): Promise<{ tourId: string; guideId: string; lat: number; lng: number; sentAt: string } | null> {
+    try {
+      const response = await fetch(`${this.toursServiceUrl}/api/tours/${tourId}/guide-location`);
+      if (!response.ok) return null;
+      const body = await response.json();
+      if (!body || !body.tourId) return null;
+      return body;
+    } catch {
+      return null;
+    }
   }
 
   private extractAccessToken(client: AuthenticatedSocket): string | null {

@@ -29,8 +29,8 @@ export class MeetingPointEntity {
   @Column({ type: 'double precision' })
   lng!: number;
 
-  @Column({ name: 'meetup_time', type: 'timestamptz', nullable: true })
-  meetupTime?: Date;
+  @Column({ name: 'meetup_time', type: 'varchar', length: 64, nullable: true })
+  meetupTime?: string;
 
   @Column({ name: 'is_current', type: 'boolean', default: false })
   isCurrent!: boolean;

@@ -11,6 +11,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query
 } from '@nestjs/common';
 import {
@@ -280,7 +281,7 @@ export class ToursController {
       name: dto.name,
       lat: dto.lat,
       lng: dto.lng,
-      meetupTime: this.parseOptionalDate(dto.meetupTime),
+      meetupTime: dto.meetupTime?.trim() || undefined,
       isCurrent: dto.isCurrent
     });
   }
@@ -309,7 +310,7 @@ export class ToursController {
       name: dto.name,
       lat: dto.lat,
       lng: dto.lng,
-      meetupTime: this.parseOptionalDate(dto.meetupTime),
+      meetupTime: dto.meetupTime?.trim() || undefined,
       isCurrent: dto.isCurrent
     });
   }
@@ -421,6 +422,24 @@ export class ToursController {
       throw new ForbiddenException('Only guide can manage POI');
     }
     return this.toursService.deletePoi({ tourId, poiId, userId });
+  }
+
+  @Put(':tourId/guide-location')
+  @HttpCode(HttpStatus.OK)
+  async upsertGuideLocation(
+    @Param('tourId') tourId: string,
+    @Body() body: { guideId: string; lat: number; lng: number; sentAt: string }
+  ): Promise<unknown> {
+    if (!tourId) throw new BadRequestException('Tour id is required');
+    return this.toursService.upsertGuideLocation(tourId, body);
+  }
+
+  @Get(':tourId/guide-location')
+  async getGuideLocation(
+    @Param('tourId') tourId: string
+  ): Promise<unknown> {
+    if (!tourId) throw new BadRequestException('Tour id is required');
+    return this.toursService.getGuideLocation(tourId);
   }
 
   private parseOptionalDate(value?: string): Date | undefined {

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { resolve } from 'path';
+import { GuideLastLocationEntity } from './guide-last-location.entity';
 import { HealthController } from './health.controller';
 import { MeetingPointEntity } from './meeting-point.entity';
 import { PoiEntity } from './poi.entity';
@@ -29,7 +30,7 @@ import { ToursService } from './tours.service';
           username: config.get<string>('POSTGRES_USER', 'postgres'),
           password: config.get<string>('POSTGRES_PASSWORD', 'postgres'),
           database: config.get<string>('POSTGRES_DB', 'geoplatform'),
-          entities: [TourEntity, TourParticipantEntity, MeetingPointEntity, PoiEntity],
+          entities: [TourEntity, TourParticipantEntity, MeetingPointEntity, PoiEntity, GuideLastLocationEntity],
           synchronize: true,
           ssl: postgresSsl ? { rejectUnauthorized: false } : false
         };
@@ -39,7 +40,8 @@ import { ToursService } from './tours.service';
       TourEntity,
       TourParticipantEntity,
       MeetingPointEntity,
-      PoiEntity
+      PoiEntity,
+      GuideLastLocationEntity
     ])
   ],
   controllers: [HealthController, ToursController],
