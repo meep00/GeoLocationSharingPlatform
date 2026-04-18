@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import PlaceSearchInput from '../components/PlaceSearchInput';
 import { COLORS, SHADOWS, STATUS_THEME } from '../theme';
 
 export default function ManageScreen() {
@@ -40,6 +41,18 @@ export default function ManageScreen() {
     const n = Number(v);
     if (!Number.isFinite(n)) throw new Error(`${label} must be a valid number`);
     return n;
+  };
+
+  const handleMpPlaceSelected = (place) => {
+    if (place.name) setMpName(place.name);
+    setMpLat(String(place.lat));
+    setMpLng(String(place.lng));
+  };
+
+  const handlePoiPlaceSelected = (place) => {
+    if (place.name) setPoiTitle(place.name);
+    setPoiLat(String(place.lat));
+    setPoiLng(String(place.lng));
   };
 
   const handleAddMp = () => wrap(async () => {
@@ -112,6 +125,7 @@ export default function ManageScreen() {
           <Text style={styles.cardTitle}>Meeting Points</Text>
         </View>
 
+        <PlaceSearchInput onPlaceSelected={handleMpPlaceSelected} placeholder="Search for a meeting place..." />
         <TextInput style={styles.input} value={mpName} onChangeText={setMpName} placeholder="Name" placeholderTextColor={COLORS.textMuted} />
         <View style={styles.row}>
           <TextInput style={[styles.input, styles.flex1]} value={mpLat} onChangeText={setMpLat} placeholder="Latitude" placeholderTextColor={COLORS.textMuted} keyboardType="numeric" />
@@ -160,6 +174,7 @@ export default function ManageScreen() {
           <Text style={styles.cardTitle}>Points of Interest</Text>
         </View>
 
+        <PlaceSearchInput onPlaceSelected={handlePoiPlaceSelected} placeholder="Search for a point of interest..." />
         <TextInput style={styles.input} value={poiTitle} onChangeText={setPoiTitle} placeholder="Title" placeholderTextColor={COLORS.textMuted} />
         <TextInput style={styles.input} value={poiDesc} onChangeText={setPoiDesc} placeholder="Description (optional)" placeholderTextColor={COLORS.textMuted} multiline />
         <View style={styles.row}>

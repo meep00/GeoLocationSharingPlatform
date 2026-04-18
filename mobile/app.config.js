@@ -19,6 +19,9 @@ export default {
         },
       },
     },
+    extra: {
+      googleMapsApiKey: process.env.API_KEY,
+    },
     plugins: [
       [
         "expo-location",

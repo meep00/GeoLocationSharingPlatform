@@ -11,6 +11,7 @@
     "start:auth": "npm run -w backend/auth-users-service start:dev",
     "start:tours": "npm run -w backend/tours-service start:dev",
     "start:location": "npm run -w backend/location-service start:dev",
+    "start:mobile": "npm run start -w mobile -- --android",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
   }
