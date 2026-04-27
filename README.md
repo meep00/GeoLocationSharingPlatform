@@ -541,6 +541,3 @@ Pełen scenariusz testowy w pliku `TEST_CHECKLIST.md` (F1–F17 + sekcje przekro
 - F10–F13 — dołączanie kodem i widok tury z perspektywy turysty,
 - testy odporności: stale indicator po 10 s, fallback po restarcie `location-service`, czyszczenie po przełączeniu tury.
 
-## Licencja i autorzy
-
-Projekt edukacyjny, semestr 8 — Politechnika, kierunek Informatyka, przedmiot **Zastosowania Informatyki w Gospodarce**. Repozytorium prywatne (`"private": true` w `package.json`).
